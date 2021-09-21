@@ -57,7 +57,7 @@ Outputs:
     Description: The Syndicate VPC
     Value: !Ref SyndicateVPC
     Export:
-      Name: !Sub '${AWS::StackName}-SyndicateVPC-Id'
+      Name: !Sub '${AWS::StackName}-SyndicateVPCId'
   AmqpEndpoints:
     Description: AMQP endpoint that clients should attach to
     Value: !Join [ ",", !GetAtt SyndicateBroker.AmqpEndpoints ]
