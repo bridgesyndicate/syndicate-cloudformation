@@ -1,4 +1,4 @@
-Description: Crate an Amazon MQ Broker for Bridge
+Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate
 Resources:
   SyndicateVPC:
     Type: 'AWS::EC2::VPC'
