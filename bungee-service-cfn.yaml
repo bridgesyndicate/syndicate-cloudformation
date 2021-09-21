@@ -1,0 +1,22 @@
+Resources:
+  BungeeECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: bungee
+      Cluster: arn:aws:ecs:us-west-2:595508394202:cluster/syndicate-bungee-01
+      DesiredCount: '1'
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: bungee-test-01
+          ContainerPort: 25565
+          TargetGroupArn: arn:aws:elasticloadbalancing:us-west-2:595508394202:targetgroup/ecs-bungee-target/3f918fb213cd1232
+      NetworkConfiguration:
+        AwsvpcConfiguration: 
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - sg-060a4e1490a93b62c
+          Subnets: 
+            - subnet-0b60606dea2eedb32
+      SchedulingStrategy: REPLICA
+      TaskDefinition: arn:aws:ecs:us-west-2:595508394202:task-definition/bungee:1

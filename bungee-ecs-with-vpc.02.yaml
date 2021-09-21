@@ -1,0 +1,263 @@
+Resources:
+  BungeeVPCInternetGateway:
+    Type: AWS::EC2::InternetGateway
+  BungeeVPCAttachInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref BungeeVPC
+      InternetGatewayId: !Ref BungeeVPCInternetGateway
+  BungeeExternalIP:
+    Type: AWS::EC2::EIP
+  BungeeECSService:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      ServiceName: cfn-bungee
+      Cluster: 'arn:aws:ecs:us-west-2:595508394202:cluster/syndicate-bungee-01'
+      DesiredCount: '1'
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: bungee-test-01
+          ContainerPort: 25565
+          TargetGroupArn: !Ref BungeeTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref MinecraftIngressSecurityGroup
+          Subnets:
+            - !Ref SubnetEC2S1JRJR
+      SchedulingStrategy: REPLICA
+      TaskDefinition: 'arn:aws:ecs:us-west-2:595508394202:task-definition/bungee:1'
+    DependsOn:
+      - MinecraftListener
+      - MinecraftIngressSecurityGroup
+  BungeeLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      SubnetMappings:
+        - SubnetId: !Ref SubnetEC2S1JRJR
+          AllocationId: !GetAtt BungeeExternalIP.AllocationId
+      Type: network
+  MinecraftListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+         LoadBalancerArn: !Ref BungeeLoadBalancer
+         DefaultActions:
+           - Type: forward
+             TargetGroupArn: !Ref BungeeTargetGroup
+         Port: 25565
+         Protocol: "TCP"
+  BungeeTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      TargetType: ip
+      Protocol: TCP
+      Port: 25565
+      VpcId: !Ref BungeeVPC
+  BungeeVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound http and https from 10.0.0.0/16
+      VpcId: !Ref BungeeVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        CidrIp: 10.0.0.0/16
+      - IpProtocol: tcp
+        ToPort: 443
+        FromPort: 443
+        CidrIp: 10.0.0.0/16
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+    DependsOn:
+      - BungeeVPC
+  MinecraftIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound minecraft
+      VpcId: !Ref BungeeVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 25565
+        FromPort: 25565
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+    DependsOn:
+      - BungeeVPC
+  S3EndpointRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref BungeeVPC
+  S3EndpointRouteTableSubnets:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref S3EndpointRouteTable
+      SubnetId: !Ref SubnetEC2S1JRJR
+    DependsOn:
+      - SubnetEC2S1JRJR
+  S3EndpointDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: BungeeVPCInternetGateway
+    Properties:
+      RouteTableId: !Ref S3EndpointRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref BungeeVPCInternetGateway
+  SSMEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref BungeeVPC
+      SubnetIds:
+        - !Ref SubnetEC2S1JRJR
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'      
+    DependsOn:
+      - BungeeVPC
+      - VPCEndpointSecurityGroup
+      - SubnetEC2S1JRJR
+  ECRApiEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref BungeeVPC
+      SubnetIds:
+        - !Ref SubnetEC2S1JRJR
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api'
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'      
+    DependsOn:
+      - BungeeVPC
+      - VPCEndpointSecurityGroup
+      - SubnetEC2S1JRJR
+  SecretsManagerEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref BungeeVPC
+      SubnetIds:
+        - !Ref SubnetEC2S1JRJR
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'      
+    DependsOn:
+      - BungeeVPC
+      - VPCEndpointSecurityGroup
+      - SubnetEC2S1JRJR
+  ECRDKREndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref BungeeVPC
+      SubnetIds:
+        - !Ref SubnetEC2S1JRJR
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'      
+    DependsOn:
+      - BungeeVPC
+      - VPCEndpointSecurityGroup
+      - SubnetEC2S1JRJR
+  LogEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref BungeeVPC
+      SubnetIds:
+        - !Ref SubnetEC2S1JRJR
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+      SecurityGroupIds:
+        - !Ref VPCEndpointSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'      
+    DependsOn:
+      - BungeeVPC
+      - VPCEndpointSecurityGroup
+      - SubnetEC2S1JRJR
+  S3Endpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:      
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref BungeeVPC
+      RouteTableIds:
+        - !Ref S3EndpointRouteTable
+    DependsOn:
+      - BungeeVPC
+      - S3EndpointRouteTable
+  SubnetEC2S1JRJR:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId: !Ref BungeeVPC
