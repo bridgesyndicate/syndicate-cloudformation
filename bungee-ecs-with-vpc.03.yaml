@@ -1,11 +1,4 @@
 Resources:
-  SyndicateVPCInternetGateway:
-    Type: AWS::EC2::InternetGateway
-  SyndicateVPCAttachInternetGateway:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId: !Ref SyndicateVPC
-      InternetGatewayId: !Ref SyndicateVPCInternetGateway
   BungeeExternalIP:
     Type: AWS::EC2::EIP
   BungeeECSService:

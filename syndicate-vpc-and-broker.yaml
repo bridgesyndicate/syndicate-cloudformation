@@ -1,4 +1,4 @@
-Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate
+Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate. The SubnetBroker has an internet GW and route table that allow it to be accessed via SSH if you launch an instance with a public ip within 10.0.255.0/24.
 Resources:
   SyndicateVPC:
     Type: 'AWS::EC2::VPC'
@@ -6,11 +6,51 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
+  SyndicateVPCRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SyndicateVPC
+  SyndicateVPCDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: SyndicateVPCAttachInternetGateway
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref SyndicateVPCInternetGateway
+  SyndicateVPCInternetGateway:
+    Type: AWS::EC2::InternetGateway
+  SyndicateVPCAttachInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref SyndicateVPC
+      InternetGatewayId: !Ref SyndicateVPCInternetGateway
   SubnetBroker:
     Type: 'AWS::EC2::Subnet'
     Properties:
       CidrBlock: 10.0.255.0/24
       VpcId: !Ref SyndicateVPC
+  SyndicateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      SubnetId: !Ref SubnetBroker
+  SSHIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound ssh traffic
+      VpcId: !Ref SyndicateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+    DependsOn:
+      - SyndicateVPC
   RabbitIngressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
