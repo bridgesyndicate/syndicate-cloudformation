@@ -1,25 +1,25 @@
 Description: Crate an Amazon MQ Broker for Bridge
 Resources:
-  SyndicateBrokerVPC:
+  SyndicateVPC:
     Type: 'AWS::EC2::VPC'
     Properties:
-      CidrBlock: 10.1.0.0/16
+      CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
   SubnetBroker:
     Type: 'AWS::EC2::Subnet'
     Properties:
-      CidrBlock: 10.1.0.0/24
-      VpcId: !Ref SyndicateBrokerVPC
+      CidrBlock: 10.0.255.0/24
+      VpcId: !Ref SyndicateVPC
   RabbitIngressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow inbound rabbitmq
-      VpcId: !Ref SyndicateBrokerVPC
+      VpcId: !Ref SyndicateVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         ToPort: 5672
-        FromPort: 5672
+        FromPort: 5671
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: -1
@@ -27,7 +27,7 @@ Resources:
         ToPort: -1
         CidrIp: 0.0.0.0/0
     DependsOn:
-      - SyndicateBrokerVPC
+      - SyndicateVPC
   SyndicateBroker:
     Type: 'AWS::AmazonMQ::Broker'
     Properties:
@@ -37,6 +37,8 @@ Resources:
       EngineType: RabbitMQ
       EngineVersion: 3.8.11
       HostInstanceType: mq.t3.micro
+      Logs:
+        General: 'true'
       MaintenanceWindowStartTime:
         DayOfWeek: Monday
         TimeOfDay: '22:45'
@@ -51,11 +53,23 @@ Resources:
           Password: AmazonMqPassword
           Username: AmazonMqUsername
 Outputs:
-  AmqpEndpoints: 
+  SyndicateVPC:
+    Description: The Syndicate VPC
+    Value: !Ref SyndicateVPC
+    Export:
+      Name: !Sub '${AWS::StackName}-SyndicateVPC-Id'
+  AmqpEndpoints:
     Description: AMQP endpoint that clients should attach to
     Value: !Join [ ",", !GetAtt SyndicateBroker.AmqpEndpoints ]
     Export:
       Name: !Sub '${AWS::StackName}-AmqpEndpoint'
-  Arn: 
-    Description: ARN of the cluster resource
-    Value: !GetAtt SyndicateBroker.Arn
+  RabbitIngressSecurityGroupId:
+    Description: Name id the ingress security group for Rabbit
+    Value:  !GetAtt RabbitIngressSecurityGroup.GroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-RabbitIngressSecurityGroupId'
+  SubnetBrokerId:
+    Description: Name id of the subnet for Rabbit
+    Value:  !Ref SubnetBroker
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetBrokerId'
