@@ -29,11 +29,40 @@ Resources:
     Properties:
       CidrBlock: 10.0.255.0/24
       VpcId: !Ref SyndicateVPC
+  SubnetLambda:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.0.254.0/24
+      VpcId: !Ref SyndicateVPC
   SyndicateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetBroker
+  SyndicateEC2VPCEndpointSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      SubnetId: !Ref SubnetLambda
+  HTTPIngresSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound http and https
+      VpcId: !Ref SyndicateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 80
+        FromPort: 80
+        CidrIp: 10.0.0.0/16
+      - IpProtocol: tcp
+        ToPort: 443
+        FromPort: 443
+        CidrIp: 10.0.0.0/16
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
   SSHIngressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -68,6 +97,22 @@ Resources:
         CidrIp: 0.0.0.0/0
     DependsOn:
       - SyndicateVPC
+  EC2VPCEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.dynamodb'
+      VpcId: !Ref SyndicateVPC
+      RouteTableIds:
+        - !Ref SyndicateVPCRouteTable
   SyndicateBroker:
     Type: 'AWS::AmazonMQ::Broker'
     Properties:
@@ -109,7 +154,17 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-RabbitIngressSecurityGroupId'
   SubnetBrokerId:
-    Description: Name id of the subnet for Rabbit
+    Description: Id of the subnet for Rabbit, delete me
     Value:  !Ref SubnetBroker
     Export:
       Name: !Sub '${AWS::StackName}-SubnetBrokerId'
+  SubnetLambdaId:
+    Description: Id of the subnet for Lambda
+    Value:  !Ref SubnetLambda
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetLambdaId'
+  HTTPIngressSecurityGroupId:
+    Description: Id of the ingress security group for HTTP
+    Value:  !GetAtt HTTPIngresSecurityGroup.GroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-HTTPIngressSecurityGroupId'
