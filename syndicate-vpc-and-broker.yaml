@@ -34,6 +34,11 @@ Resources:
     Properties:
       CidrBlock: 10.0.254.0/24
       VpcId: !Ref SyndicateVPC
+  SubnetMinecraft:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/20
+      VpcId: !Ref SyndicateVPC
   SyndicateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -44,6 +49,11 @@ Resources:
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetLambda
+  SyndicateSubnetMinecraftRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      SubnetId: !Ref SubnetMinecraft
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -97,6 +107,23 @@ Resources:
         CidrIp: 0.0.0.0/0
     DependsOn:
       - SyndicateVPC
+  MinecraftIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound minecraft
+      VpcId: !Ref SyndicateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 25565
+        FromPort: 25565
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+    DependsOn:
+      - SyndicateVPC
   DynamoDBVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -113,8 +140,24 @@ Resources:
       VpcId: !Ref SyndicateVPC
       RouteTableIds:
         - !Ref SyndicateVPCRouteTable
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref SyndicateVPC
+      RouteTableIds:
+        - !Ref SyndicateVPCRouteTable
   EC2Endpoint:
-    Type: 'AWS::EC2::VPCEndpoint'
+    Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
@@ -134,13 +177,133 @@ Resources:
             Resource:
               - '*'
   ECSEndpoint:
-    Type: 'AWS::EC2::VPCEndpoint'
+    Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
         - !Ref SubnetLambda
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  SSMMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  ECRApiEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  SecretsManagerEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  ECRDKREndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
+  LogEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetMinecraft
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
       PrivateDnsEnabled: 'true'
@@ -189,6 +352,83 @@ Resources:
           Weight: 1
         - CapacityProvider: FARGATE_SPOT
           Weight: 1
+  SyndicateBungeeTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: arn:aws:iam::595508394202:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: SyndicateBungeeTask
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/bridge-dev-server
+              awslogs-region: us-west-2
+              awslogs-stream-prefix: ecs
+          PortMappings:
+            - HostPort: 25565
+              Protocol: tcp
+              ContainerPort: 25565
+          Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bungee-servers:latest
+          Environment:
+            - Name: RABBIT_URI
+              Value: !ImportValue
+                'SyndicateVPCAndBroker-AmqpEndpoint'
+      PlacementConstraints: []
+      Memory: 1024
+      TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
+      Family: SyndicateBungeeTaskDefinition
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '512'
+  SyndicateBungeeECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateBungeeECSService
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: SyndicateBungeeTask
+          ContainerPort: 25565
+          TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref MinecraftIngressSecurityGroup
+          Subnets:
+            - !Ref SubnetMinecraft
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateBungeeTaskDefinition
+    DependsOn:
+      - BungeeLoadBalancerMinecraftListener
+  BungeeLoadBalancerElasticIP:
+    Type: AWS::EC2::EIP
+  BungeeLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SubnetMappings:
+        - SubnetId: !Ref SubnetMinecraft
+          AllocationId: !GetAtt BungeeLoadBalancerElasticIP.AllocationId
+      Type: network
+  BungeeLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      Protocol: TCP
+      Port: 25565
+      VpcId: !Ref SyndicateVPC
+  BungeeLoadBalancerMinecraftListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+         LoadBalancerArn: !Ref BungeeLoadBalancer
+         DefaultActions:
+           - Type: forward
+             TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
+         Port: 25565
+         Protocol: "TCP"
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
