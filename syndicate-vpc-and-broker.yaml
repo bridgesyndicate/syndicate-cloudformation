@@ -1,7 +1,7 @@
 Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate. The SubnetBroker has an internet GW and route table that allow it to be accessed via SSH if you launch an instance with a public ip within 10.0.255.0/24.
 Resources:
   SyndicateVPC:
-    Type: 'AWS::EC2::VPC'
+    Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
@@ -25,12 +25,12 @@ Resources:
       VpcId: !Ref SyndicateVPC
       InternetGatewayId: !Ref SyndicateVPCInternetGateway
   SubnetBroker:
-    Type: 'AWS::EC2::Subnet'
+    Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.255.0/24
       VpcId: !Ref SyndicateVPC
   SubnetLambda:
-    Type: 'AWS::EC2::Subnet'
+    Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.254.0/24
       VpcId: !Ref SyndicateVPC
@@ -39,7 +39,7 @@ Resources:
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetBroker
-  SyndicateEC2VPCEndpointSubnetRouteTableAssociation:
+  SyndicateDynamoDBVPCEndpointSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
@@ -97,8 +97,8 @@ Resources:
         CidrIp: 0.0.0.0/0
     DependsOn:
       - SyndicateVPC
-  EC2VPCEndpoint:
-    Type: 'AWS::EC2::VPCEndpoint'
+  DynamoDBVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -114,7 +114,7 @@ Resources:
       RouteTableIds:
         - !Ref SyndicateVPCRouteTable
   SyndicateBroker:
-    Type: 'AWS::AmazonMQ::Broker'
+    Type: AWS::AmazonMQ::Broker
     Properties:
       AutoMinorVersionUpgrade: 'false'
       BrokerName: SyndicateRabbitBroker
@@ -153,11 +153,6 @@ Outputs:
     Value:  !GetAtt RabbitIngressSecurityGroup.GroupId
     Export:
       Name: !Sub '${AWS::StackName}-RabbitIngressSecurityGroupId'
-  SubnetBrokerId:
-    Description: Id of the subnet for Rabbit, delete me
-    Value:  !Ref SubnetBroker
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetBrokerId'
   SubnetLambdaId:
     Description: Id of the subnet for Lambda
     Value:  !Ref SubnetLambda
