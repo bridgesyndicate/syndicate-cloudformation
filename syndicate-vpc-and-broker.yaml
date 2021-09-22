@@ -133,6 +133,26 @@ Resources:
               - '*'
             Resource:
               - '*'
+  ECSEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref SyndicateVPC
+      SubnetIds:
+        - !Ref SubnetLambda
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs'
+      SecurityGroupIds:
+        - !Ref HTTPIngresSecurityGroup
+      PrivateDnsEnabled: 'true'
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - '*'
+            Resource:
+              - '*'
   SyndicateBroker:
     Type: AWS::AmazonMQ::Broker
     Properties:
