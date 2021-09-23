@@ -416,12 +416,21 @@ Resources:
       - BungeeLoadBalancerMinecraftListener
   BungeeLoadBalancerElasticIP:
     Type: AWS::EC2::EIP
+  BungeeLoadBalancerElasticIPV02:
+    Type: AWS::EC2::EIP
   BungeeLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       SubnetMappings:
         - SubnetId: !Ref SubnetBungee
           AllocationId: !GetAtt BungeeLoadBalancerElasticIP.AllocationId
+      Type: network
+  BungeeLoadBalancerV02:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SubnetMappings:
+        - SubnetId: !Ref SubnetBungee
+          AllocationId: !GetAtt BungeeLoadBalancerElasticIPV02.AllocationId
       Type: network
   BungeeLoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
