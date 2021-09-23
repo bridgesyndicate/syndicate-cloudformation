@@ -6,11 +6,22 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SyndicateVPC
+  PublicSubnetDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: SyndicateVPCAttachInternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref SyndicateVPCInternetGateway
   NATGateway:
     Type: AWS::EC2::NatGateway
     Properties:
       ConnectivityType: private
-      SubnetId: !Ref SubnetBungee
+      SubnetId: !Ref SubnetPublic
   NATRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -25,13 +36,6 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref SyndicateVPC
-  SyndicateVPCDefaultRoute:
-    Type: AWS::EC2::Route
-    DependsOn: SyndicateVPCAttachInternetGateway
-    Properties:
-      RouteTableId: !Ref SyndicateVPCRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref SyndicateVPCInternetGateway
   SyndicateVPCInternetGateway:
     Type: AWS::EC2::InternetGateway
   SyndicateVPCAttachInternetGateway:
@@ -48,6 +52,11 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.254.0/24
+      VpcId: !Ref SyndicateVPC
+  SubnetPublic:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.253.0/24
       VpcId: !Ref SyndicateVPC
   SubnetMinecraft:
     Type: AWS::EC2::Subnet
@@ -181,6 +190,7 @@ Resources:
       VpcId: !Ref SyndicateVPC
       RouteTableIds:
         - !Ref SyndicateVPCRouteTable
+        - !Ref NATRouteTable
   EC2Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
