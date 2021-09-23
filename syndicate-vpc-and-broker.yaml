@@ -1,4 +1,4 @@
-Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate. The SubnetBroker has an internet GW and route table that allow it to be accessed via SSH if you launch an instance with a public ip within 10.0.255.0/24.
+Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate. The SubnetBroker has an internet GW and route table that allow it to be accessed via SSH if you launch an instance with a public ip within 10.0.255.0/24. The 254 subnet has internet access b/c Lambda needs Dynamo. The /20 subnet does not need the internet. The 16.0 subnet needs the internet so Bungee can reach minecraft.net; the endpoints are on the 17 network, I dont think they need internet
 Resources:
   SyndicateVPC:
     Type: AWS::EC2::VPC
@@ -39,6 +39,16 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/20
       VpcId: !Ref SyndicateVPC
+  SubnetBungee:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.16.0/24
+      VpcId: !Ref SyndicateVPC
+  SubnetVPCEndpoints:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.17.0/24
+      VpcId: !Ref SyndicateVPC
   SyndicateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -54,6 +64,16 @@ Resources:
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetMinecraft
+  SyndicateSubnetBungeeRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      SubnetId: !Ref SubnetBungee
+  SyndicateSubnetVPCEndpointsRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref SyndicateVPCRouteTable
+      SubnetId: !Ref SubnetVPCEndpoints
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -162,7 +182,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetLambda
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -182,7 +202,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetLambda
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecs'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -202,7 +222,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -222,7 +242,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -242,7 +262,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -262,7 +282,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -282,7 +302,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -302,7 +322,7 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref SyndicateVPC
       SubnetIds:
-        - !Ref SubnetMinecraft
+        - !Ref SubnetVPCEndpoints
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
       SecurityGroupIds:
         - !Ref HTTPIngresSecurityGroup
@@ -399,7 +419,7 @@ Resources:
           SecurityGroups:
             - !Ref MinecraftIngressSecurityGroup
           Subnets:
-            - !Ref SubnetMinecraft
+            - !Ref SubnetBungee
       SchedulingStrategy: REPLICA
       TaskDefinition: !Ref SyndicateBungeeTaskDefinition
     DependsOn:
@@ -410,7 +430,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       SubnetMappings:
-        - SubnetId: !Ref SubnetMinecraft
+        - SubnetId: !Ref SubnetBungee
           AllocationId: !GetAtt BungeeLoadBalancerElasticIP.AllocationId
       Type: network
   BungeeLoadBalancerTargetGroup:
@@ -429,6 +449,11 @@ Resources:
              TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
          Port: 25565
          Protocol: "TCP"
+  NATSubnetBungee:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      ConnectivityType: private
+      SubnetId: !Ref SubnetBungee
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
