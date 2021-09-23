@@ -6,6 +6,21 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      ConnectivityType: private
+      SubnetId: !Ref SubnetBungee
+  NATRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SyndicateVPC
+  NATDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref NATRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
   SyndicateVPCRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -59,6 +74,11 @@ Resources:
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetLambda
+  BungeeSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref NATRouteTable
+      SubnetId: !Ref SubnetBungee
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -434,11 +454,6 @@ Resources:
              TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV02
          Port: 25565
          Protocol: "TCP"
-  NATGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      ConnectivityType: private
-      SubnetId: !Ref SubnetBungee
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
