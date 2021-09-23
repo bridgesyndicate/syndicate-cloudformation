@@ -49,31 +49,21 @@ Resources:
     Properties:
       CidrBlock: 10.0.17.0/24
       VpcId: !Ref SyndicateVPC
-  SyndicateSubnetRouteTableAssociation:
+  BrokerSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetBroker
-  SyndicateDynamoDBVPCEndpointSubnetRouteTableAssociation:
+  LambdaSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetLambda
-  SyndicateSubnetMinecraftRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref SyndicateVPCRouteTable
-      SubnetId: !Ref SubnetMinecraft
-  SyndicateSubnetBungeeRouteTableAssociation:
+  BungeeSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref SyndicateVPCRouteTable
       SubnetId: !Ref SubnetBungee
-  SyndicateSubnetVPCEndpointsRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref SyndicateVPCRouteTable
-      SubnetId: !Ref SubnetVPCEndpoints
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
