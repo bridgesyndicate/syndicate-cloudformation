@@ -17,11 +17,14 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref SyndicateVPCInternetGateway
+  NatExternalIP:
+    Type: AWS::EC2::EIP
   NATGateway:
     Type: AWS::EC2::NatGateway
     Properties:
-      ConnectivityType: private
+      ConnectivityType: public
       SubnetId: !Ref SubnetPublic
+      AllocationId: !GetAtt NatExternalIP.AllocationId
   NATRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -88,6 +91,11 @@ Resources:
     Properties:
       RouteTableId: !Ref NATRouteTable
       SubnetId: !Ref SubnetBungee
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref SubnetPublic
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
