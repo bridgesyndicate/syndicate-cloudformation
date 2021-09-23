@@ -414,8 +414,6 @@ Resources:
       TaskDefinition: !Ref SyndicateBungeeTaskDefinition
     DependsOn:
       - BungeeLoadBalancerMinecraftListenerV02
-  BungeeLoadBalancerElasticIP:
-    Type: AWS::EC2::EIP
   BungeeLoadBalancerElasticIPV02:
     Type: AWS::EC2::EIP
   BungeeLoadBalancerV02:
