@@ -399,7 +399,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: /ecs/bridge-dev-server
+              awslogs-group: /ecs/SyndicateBungeeTask
               awslogs-region: us-west-2
               awslogs-stream-prefix: ecs
           PortMappings:
@@ -470,6 +470,80 @@ Resources:
              TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV03
          Port: 25565
          Protocol: "TCP"
+  LobbyLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SubnetMappings:
+        - SubnetId: !Ref SubnetMinecraft
+      Type: network
+      Scheme: internal
+  LobbyLoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      Protocol: TCP
+      Port: 25565
+      VpcId: !Ref SyndicateVPC
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      HealthCheckIntervalSeconds: 10
+  LobbyLoadBalancerMinecraftListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+         LoadBalancerArn: !Ref LobbyLoadBalancer
+         DefaultActions:
+           - Type: forward
+             TargetGroupArn: !Ref LobbyLoadBalancerTargetGroup
+         Port: 25565
+         Protocol: "TCP"
+  SyndicateLobbyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: arn:aws:iam::595508394202:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: SyndicateLobbyTask
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/SyndicateLobbyTask
+              awslogs-region: us-west-2
+              awslogs-stream-prefix: ecs
+          PortMappings:
+            - HostPort: 25565
+              Protocol: tcp
+              ContainerPort: 25565
+          Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-lobby:latest
+      PlacementConstraints: []
+      Memory: 1024
+      TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
+      Family: SyndicateLobbyTaskDefinition
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '512'
+  SyndicateLobbyECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateLobbyECSServiceV03
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: SyndicateLobbyTask
+          ContainerPort: 25565
+          TargetGroupArn: !Ref LobbyLoadBalancerTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref MinecraftIngressSecurityGroup
+          Subnets:
+            - !Ref SubnetMinecraft
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateLobbyTaskDefinition
+    DependsOn:
+      - LobbyLoadBalancerMinecraftListener
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
