@@ -446,15 +446,6 @@ Resources:
       Protocol: TCP
       Port: 25565
       VpcId: !Ref SyndicateVPC
-  BungeeLoadBalancerMinecraftListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-         LoadBalancerArn: !Ref BungeeLoadBalancer
-         DefaultActions:
-           - Type: forward
-             TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
-         Port: 25565
-         Protocol: "TCP"
   BungeeLoadBalancerMinecraftListenerV02:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
