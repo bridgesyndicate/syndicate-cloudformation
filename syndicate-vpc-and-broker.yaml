@@ -419,10 +419,10 @@ Resources:
         - FARGATE
       NetworkMode: awsvpc
       Cpu: '512'
-  SyndicateBungeeECSServiceV02:
+  SyndicateBungeeECSServiceV03:
     Type: AWS::ECS::Service
     Properties:
-      ServiceName: SyndicateBungeeECSServiceV02
+      ServiceName: SyndicateBungeeECSServiceV03
       Cluster: !Ref SyndicateECSCluster
       DesiredCount: 0
       EnableExecuteCommand: 'true'
@@ -430,7 +430,7 @@ Resources:
       LoadBalancers:
         - ContainerName: SyndicateBungeeTask
           ContainerPort: 25565
-          TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV02
+          TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV03
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -441,30 +441,33 @@ Resources:
       SchedulingStrategy: REPLICA
       TaskDefinition: !Ref SyndicateBungeeTaskDefinition
     DependsOn:
-      - BungeeLoadBalancerMinecraftListenerV02
-  BungeeLoadBalancerElasticIPV02:
+      - BungeeLoadBalancerMinecraftListenerV03
+  BungeeLoadBalancerElasticIPV03:
     Type: AWS::EC2::EIP
-  BungeeLoadBalancerV02:
+  BungeeLoadBalancerV03:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       SubnetMappings:
-        - SubnetId: !Ref SubnetBungee
-          AllocationId: !GetAtt BungeeLoadBalancerElasticIPV02.AllocationId
+        - SubnetId: !Ref SubnetPublic
+          AllocationId: !GetAtt BungeeLoadBalancerElasticIPV03.AllocationId
       Type: network
-  BungeeLoadBalancerTargetGroupV02:
+  BungeeLoadBalancerTargetGroupV03:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       TargetType: ip
       Protocol: TCP
       Port: 25565
       VpcId: !Ref SyndicateVPC
-  BungeeLoadBalancerMinecraftListenerV02:
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      HealthCheckIntervalSeconds: 10
+  BungeeLoadBalancerMinecraftListenerV03:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-         LoadBalancerArn: !Ref BungeeLoadBalancerV02
+         LoadBalancerArn: !Ref BungeeLoadBalancerV03
          DefaultActions:
            - Type: forward
-             TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV02
+             TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV03
          Port: 25565
          Protocol: "TCP"
 Outputs:
