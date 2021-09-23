@@ -391,29 +391,6 @@ Resources:
         - FARGATE
       NetworkMode: awsvpc
       Cpu: '512'
-  SyndicateBungeeECSService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: SyndicateBungeeECSService
-      Cluster: !Ref SyndicateECSCluster
-      DesiredCount: 0
-      EnableExecuteCommand: 'true'
-      LaunchType: FARGATE
-      LoadBalancers:
-        - ContainerName: SyndicateBungeeTask
-          ContainerPort: 25565
-          TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups:
-            - !Ref MinecraftIngressSecurityGroup
-          Subnets:
-            - !Ref SubnetBungee
-      SchedulingStrategy: REPLICA
-      TaskDefinition: !Ref SyndicateBungeeTaskDefinition
-    DependsOn:
-      - BungeeLoadBalancerMinecraftListener
   SyndicateBungeeECSServiceV02:
     Type: AWS::ECS::Service
     Properties:
