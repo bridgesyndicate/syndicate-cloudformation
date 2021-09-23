@@ -76,11 +76,6 @@ Resources:
     Properties:
       CidrBlock: 10.0.17.0/24
       VpcId: !Ref SyndicateVPC
-  BrokerSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref SyndicateVPCRouteTable
-      SubnetId: !Ref SubnetBroker
   LambdaSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
