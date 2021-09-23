@@ -1,4 +1,4 @@
-Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate. The SubnetBroker has an internet GW and route table that allow it to be accessed via SSH if you launch an instance with a public ip within 10.0.255.0/24. The 254 subnet has internet access b/c Lambda needs Dynamo. The /20 subnet does not need the internet. The 16.0 subnet needs the internet so Bungee can reach minecraft.net; the endpoints are on the 17 network, I dont think they need internet
+Description: SyndicateVPCAndBroker, Create a VPC and an Amazon MQ Broker for Bridge Syndicate.
 Resources:
   SyndicateVPC:
     Type: AWS::EC2::VPC
@@ -7,6 +7,10 @@ Resources:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
   PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SyndicateVPC
+  S3RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref SyndicateVPC
@@ -91,6 +95,11 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref SubnetPublic
+  MinecraftSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref S3RouteTable
+      SubnetId: !Ref SubnetMinecraft
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -194,6 +203,7 @@ Resources:
       RouteTableIds:
         - !Ref SyndicateVPCRouteTable
         - !Ref NATRouteTable
+        - !Ref S3RouteTable
   EC2Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
