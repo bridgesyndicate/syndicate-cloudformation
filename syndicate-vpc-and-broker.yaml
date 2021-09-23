@@ -414,6 +414,29 @@ Resources:
       TaskDefinition: !Ref SyndicateBungeeTaskDefinition
     DependsOn:
       - BungeeLoadBalancerMinecraftListener
+  SyndicateBungeeECSServiceV02:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateBungeeECSServiceV02
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: SyndicateBungeeTask
+          ContainerPort: 25565
+          TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV02
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref MinecraftIngressSecurityGroup
+          Subnets:
+            - !Ref SubnetBungee
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateBungeeTaskDefinition
+    DependsOn:
+      - BungeeLoadBalancerMinecraftListenerV02
   BungeeLoadBalancerElasticIP:
     Type: AWS::EC2::EIP
   BungeeLoadBalancerElasticIPV02:
@@ -439,6 +462,13 @@ Resources:
       Protocol: TCP
       Port: 25565
       VpcId: !Ref SyndicateVPC
+  BungeeLoadBalancerTargetGroupV02:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      TargetType: ip
+      Protocol: TCP
+      Port: 25565
+      VpcId: !Ref SyndicateVPC
   BungeeLoadBalancerMinecraftListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -446,6 +476,15 @@ Resources:
          DefaultActions:
            - Type: forward
              TargetGroupArn: !Ref BungeeLoadBalancerTargetGroup
+         Port: 25565
+         Protocol: "TCP"
+  BungeeLoadBalancerMinecraftListenerV02:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+         LoadBalancerArn: !Ref BungeeLoadBalancerV02
+         DefaultActions:
+           - Type: forward
+             TargetGroupArn: !Ref BungeeLoadBalancerTargetGroupV02
          Port: 25565
          Protocol: "TCP"
   NATSubnetBungee:
