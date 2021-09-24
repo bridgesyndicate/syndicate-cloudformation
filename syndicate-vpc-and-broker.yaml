@@ -554,6 +554,53 @@ Resources:
       TaskDefinition: !Ref SyndicateLobbyTaskDefinition
     DependsOn:
       - LobbyLoadBalancerMinecraftListener
+  SyndicateBridgeTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: arn:aws:iam::595508394202:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: SyndicateBridgeTask
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/SyndicateBridgeTask
+              awslogs-region: us-west-2
+              awslogs-stream-prefix: ecs
+          PortMappings:
+            - HostPort: 25565
+              Protocol: tcp
+              ContainerPort: 25565
+          Environment:
+            - Name: SYNDICATE_ENV
+              Value: production
+            - Name: SYNDICATE_MATCH_QUEUE_NAME
+              Value: syndicate_production_games
+          Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bridge-servers:latest
+      PlacementConstraints: []
+      Memory: 1024
+      TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
+      Family: SyndicateBridgeTaskDefinition
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '512'
+  SyndicateBridgeECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateBridgeECSService
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref MinecraftIngressSecurityGroup
+          Subnets:
+            - !Ref SubnetMinecraft
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateBridgeTaskDefinition
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
