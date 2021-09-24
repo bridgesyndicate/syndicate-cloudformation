@@ -80,6 +80,16 @@ Resources:
     Properties:
       CidrBlock: 10.0.17.0/24
       VpcId: !Ref SyndicateVPC
+  SubnetDiscordBot:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.18.0/24
+      VpcId: !Ref SyndicateVPC
+  DiscordBotSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref S3RouteTable
+      SubnetId: !Ref SubnetDiscordBot
   LambdaSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
