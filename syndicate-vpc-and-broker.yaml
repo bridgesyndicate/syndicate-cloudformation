@@ -88,7 +88,7 @@ Resources:
   DiscordBotSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref S3RouteTable
+      RouteTableId: !Ref NATRouteTable
       SubnetId: !Ref SubnetDiscordBot
   LambdaSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -591,6 +591,45 @@ Resources:
             - !Ref SubnetMinecraft
       SchedulingStrategy: REPLICA
       TaskDefinition: !Ref SyndicateBridgeTaskDefinition
+  SyndicateDiscordBotTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: arn:aws:iam::595508394202:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: SyndicateDiscordBotTask
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/SyndicateDiscordBotTask
+              awslogs-region: us-west-2
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: SYNDICATE_ENV
+              Value: production
+          Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bot:latest
+      PlacementConstraints: []
+      Memory: 1024
+      TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-discord-bot-task-role
+      Family: SyndicateDiscordBotTaskDefinition
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '512'
+  SyndicateDiscordBotECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateDiscordBotECSService
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - !Ref SubnetDiscordBot
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateDiscordBotTaskDefinition
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
