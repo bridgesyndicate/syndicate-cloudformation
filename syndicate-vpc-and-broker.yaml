@@ -71,11 +71,6 @@ Resources:
     Properties:
       CidrBlock: 10.0.16.0/24
       VpcId: !Ref SyndicateVPC
-  SubnetVPCEndpoints:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.17.0/24
-      VpcId: !Ref SyndicateVPC
   SubnetDiscordBot:
     Type: AWS::EC2::Subnet
     Properties:
