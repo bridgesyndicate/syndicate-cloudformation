@@ -108,7 +108,7 @@ Resources:
   MinecraftSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref S3RouteTable
+      RouteTableId: !Ref NATRouteTable
       SubnetId: !Ref SubnetMinecraft
   HTTPIngresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
