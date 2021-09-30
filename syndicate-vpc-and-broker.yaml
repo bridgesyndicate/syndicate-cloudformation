@@ -261,6 +261,8 @@ Resources:
             - Name: RABBIT_URI
               Value: !ImportValue
                 'SyndicateVPCAndBroker-AmqpEndpoint'
+            - Name: LOBBY_HOSTNAME
+              Value: !GetAtt LobbyLoadBalancer.DNSName
       PlacementConstraints: []
       Memory: 1024
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
