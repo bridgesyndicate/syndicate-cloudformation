@@ -61,6 +61,18 @@ Resources:
     Properties:
       CidrBlock: 10.0.253.0/24
       VpcId: !Ref SyndicateVPC
+  SubnetRDSc:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.252.0/25
+      AvailabilityZone: 'us-west-2c'
+      VpcId: !Ref SyndicateVPC
+  SubnetRDSd:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.252.128/25
+      AvailabilityZone: 'us-west-2d'
+      VpcId: !Ref SyndicateVPC
   SubnetMinecraft:
     Type: AWS::EC2::Subnet
     Properties:
@@ -171,6 +183,21 @@ Resources:
         CidrIp: 0.0.0.0/0
     DependsOn:
       - SyndicateVPC
+  PostgresIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow inbound postgres
+      VpcId: !Ref SyndicateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        ToPort: 5432
+        FromPort: 5432
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
   DynamoDBVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -482,6 +509,28 @@ Resources:
             - !Ref SubnetDiscordBot
       SchedulingStrategy: REPLICA
       TaskDefinition: !Ref SyndicateDiscordBotTaskDefinition
+  SyndicateRankedRDSInstanceSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: SyndicateRankedRDSInstanceSubnetGroup
+      SubnetIds:
+        - !Ref SubnetRDSc
+        - !Ref SubnetRDSd
+  SyndicateRankedRDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 10
+      BackupRetentionPeriod: 14
+      DBInstanceClass: db.t2.micro
+      DBSubnetGroupName: !Ref SyndicateRankedRDSInstanceSubnetGroup
+      DeleteAutomatedBackups: 'false'
+      Engine: postgres
+      EngineVersion: 12.8
+      MasterUsername: AmazonPgUsername
+      MasterUserPassword: AmazonPgPassword
+      StorageType: standard
+      VPCSecurityGroups:
+        - !Ref PostgresIngressSecurityGroup
 Outputs:
   SyndicateVPC:
     Description: The Syndicate VPC
@@ -508,3 +557,8 @@ Outputs:
     Value:  !GetAtt HTTPIngresSecurityGroup.GroupId
     Export:
       Name: !Sub '${AWS::StackName}-HTTPIngressSecurityGroupId'
+  RDSEndpoint:
+    Description: Postgres endpoint
+    Value: !GetAtt SyndicateRankedRDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-RDSEndpoint'
