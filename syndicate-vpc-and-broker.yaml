@@ -559,6 +559,11 @@ Outputs:
     Value:  !GetAtt HTTPIngresSecurityGroup.GroupId
     Export:
       Name: !Sub '${AWS::StackName}-HTTPIngressSecurityGroupId'
+  PostgresIngressSecurityGroupId:
+    Description: Id of the ingress security group for Postgres
+    Value:  !GetAtt PostgresIngressSecurityGroup.GroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-PostgresIngressSecurityGroupId'
   RDSEndpoint:
     Description: Postgres endpoint
     Value: !GetAtt SyndicateRankedRDSInstance.Endpoint.Address
