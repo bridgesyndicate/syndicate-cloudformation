@@ -169,7 +169,7 @@ Resources:
       - IpProtocol: -1
         FromPort: -1
         ToPort: -1
-        CidrIp: 0.0.0.0/0
+        CidrIp: 10.0.0.0/16
     DependsOn:
       - SyndicateVPC
   MinecraftIngressSecurityGroup:
@@ -198,7 +198,7 @@ Resources:
       - IpProtocol: tcp
         ToPort: 5432
         FromPort: 5432
-        CidrIp: 0.0.0.0/0
+        CidrIp: 10.0.0.0/16
       SecurityGroupEgress:
       - IpProtocol: -1
         FromPort: -1
