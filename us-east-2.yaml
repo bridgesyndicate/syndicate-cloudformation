@@ -160,6 +160,8 @@ Resources:
               Value: amqps://b-c1cba83f-2b4d-4463-bef0-37cde0190712.mq.us-west-2.amazonaws.com:5671
             - Name: LOBBY_HOSTNAME
               Value: !GetAtt LobbyLoadBalancer.DNSName
+            - Name: SYNDICATE_WEB_SERVICE_REGION
+              Value: us-west-2
       PlacementConstraints: []
       Memory: 1024
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
@@ -322,6 +324,8 @@ Resources:
               Value: production
             - Name: SYNDICATE_MATCH_QUEUE_NAME
               Value: syndicate_production_games
+            - Name: SYNDICATE_WEB_SERVICE_REGION
+              Value: us-west-2
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bridge-servers:latest
       PlacementConstraints: []
       Memory: 1024
