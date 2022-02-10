@@ -136,7 +136,7 @@ Resources:
           Weight: 1
   SyndicateBungeeTaskLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: 
+    Properties:
       LogGroupName: /ecs/SyndicateBungeeTask
   SyndicateBungeeTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -249,7 +249,7 @@ Resources:
          Protocol: "TCP"
   SyndicateLobbyTaskLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: 
+    Properties:
       LogGroupName: /ecs/SyndicateLobbyTask
   SyndicateLobbyTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -301,7 +301,7 @@ Resources:
       - LobbyLoadBalancerMinecraftListener
   SyndicateBridgeTaskLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: 
+    Properties:
       LogGroupName: /ecs/SyndicateBridgeTask
   SyndicateBridgeTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -325,6 +325,8 @@ Resources:
             - Name: SYNDICATE_MATCH_QUEUE_NAME
               Value: syndicate_production_games
             - Name: SYNDICATE_WEB_SERVICE_REGION
+              Value: us-west-2
+            - Name: SYNDICATE_MATCH_QUEUE_REGION
               Value: us-west-2
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bridge-servers:latest
       PlacementConstraints: []
