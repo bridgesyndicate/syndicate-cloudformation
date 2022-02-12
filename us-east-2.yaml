@@ -162,6 +162,8 @@ Resources:
               Value: !GetAtt LobbyLoadBalancer.DNSName
             - Name: SYNDICATE_WEB_SERVICE_REGION
               Value: us-west-2
+            - Name: SYNDICATE_KICK_HOST
+              Value: www.buckytour.com
       PlacementConstraints: []
       Memory: 1024
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
@@ -267,6 +269,11 @@ Resources:
             - HostPort: 25565
               Protocol: tcp
               ContainerPort: 25565
+          Environment:
+            - Name: SYNDICATE_KITS_S3_REGION
+              Value: us-west-2
+            - Name: SYNDICATE_ENV
+              Value: production
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-lobby:latest
       PlacementConstraints: []
       Memory: 1024
@@ -327,6 +334,8 @@ Resources:
             - Name: SYNDICATE_WEB_SERVICE_REGION
               Value: us-west-2
             - Name: SYNDICATE_MATCH_QUEUE_REGION
+              Value: us-west-2
+            - Name: SYNDICATE_KITS_S3_REGION
               Value: us-west-2
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bridge-servers:latest
       PlacementConstraints: []
