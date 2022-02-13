@@ -164,6 +164,8 @@ Resources:
               Value: us-west-2
             - Name: SYNDICATE_KICK_HOST
               Value: www.buckytour.com
+            - Name: SYNDICATE_PROXY_DESCRIPTION
+              Value: 'BuckyTour Season 11 Lobby'
       PlacementConstraints: []
       Memory: 1024
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
