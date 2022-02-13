@@ -1,0 +1,17 @@
+title New game PoC
+
+
+Chat->WebService: [POST] New game
+WebService->DDB: Store game
+
+WebService->SQS: [new-game] New game
+WebService->Chat: [Response] UUID
+
+Game<-SQS: [POLL] Get game
+Game->WebService: [PUT] Container metadata
+
+WebService<->ECS: get container IP
+
+WebService->SQS: [prov-game] Game IP address
+
+Chat<-SQS: [POLL] Game IPs
