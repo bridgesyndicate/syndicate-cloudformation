@@ -348,23 +348,6 @@ Resources:
         - FARGATE
       NetworkMode: awsvpc
       Cpu: '512'
-  SyndicateBridgeECSService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: SyndicateBridgeECSService
-      Cluster: !Ref SyndicateECSCluster
-      DesiredCount: 0
-      EnableExecuteCommand: 'true'
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups:
-            - !Ref MinecraftIngressSecurityGroup
-          Subnets:
-            - !Ref SubnetMinecraft
-      SchedulingStrategy: REPLICA
-      TaskDefinition: !Ref SyndicateBridgeTaskDefinition
 Outputs:
   SyndicateVPC:
     Description: us-east-2 syndicate VPC
