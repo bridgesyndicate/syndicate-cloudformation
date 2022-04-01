@@ -163,7 +163,7 @@ Resources:
             - Name: SYNDICATE_WEB_SERVICE_REGION
               Value: us-west-2
             - Name: SYNDICATE_KICK_HOST
-              Value: www.buckytour.com
+              Value: verify.buckytour.com
             - Name: SYNDICATE_PROXY_DESCRIPTION
               Value: 'Bridge: Emerald Series Lobby'
       PlacementConstraints: []
