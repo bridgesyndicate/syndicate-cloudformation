@@ -45,16 +45,6 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref SyndicateVPC
-  PeerVPCRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref SyndicateVPC
-  PeerVPCRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PeerVPCRouteTable
-      DestinationCidrBlock: 10.1.0.0/16
-      VpcPeeringConnectionId: pcx-0c6802235aace0944
   SyndicateVPCInternetGateway:
     Type: AWS::EC2::InternetGateway
   SyndicateVPCAttachInternetGateway:
@@ -104,11 +94,6 @@ Resources:
     Properties:
       CidrBlock: 10.0.18.0/24
       VpcId: !Ref SyndicateVPC
-  SubnetBrokerSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PeerVPCRouteTable
-      SubnetId: !Ref SubnetBroker
   DiscordBotSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -185,10 +170,6 @@ Resources:
         FromPort: -1
         ToPort: -1
         CidrIp: 10.0.0.0/16
-      - IpProtocol: -1
-        FromPort: -1
-        ToPort: -1
-        CidrIp: 10.1.16.0/24
     DependsOn:
       - SyndicateVPC
   MinecraftIngressSecurityGroup:
