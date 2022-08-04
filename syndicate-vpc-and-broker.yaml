@@ -315,6 +315,10 @@ Resources:
                 'SyndicateVPCAndBroker-AmqpEndpoint'
             - Name: LOBBY_HOSTNAME
               Value: !GetAtt LobbyLoadBalancer.DNSName
+            - Name: SYNDICATE_KICK_HOST
+              Value: www.bridgesyndicate.gg
+            - Name: SYNDICATE_PROXY_DESCRIPTION
+              Value: 'Bridge Syndicate Lobby'
       PlacementConstraints: []
       Memory: 1024
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
