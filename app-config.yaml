@@ -29,9 +29,17 @@ Resources:
                 "max_task_start_delay_seconds": {
                   "description": "the maximum number of seconds before a game is started before the autoscaler adds a new task",
                   "type": "number"
+                },
+                "tasks_subnet": {
+                  "description": "the subnet where the ECS tasks run",
+                  "type": "string"
+                },
+                "tasks_security_group": {
+                  "description": "the security group where the ECS tasks run",
+                  "type": "string"
                 }
               },
-              "required": [ "min_tasks", "max_task_start_delay_seconds"]
+              "required": [ "min_tasks", "max_task_start_delay_seconds", "tasks_subnet", "tasks_security_group"]
             }
           Type: JSON_SCHEMA
   AppConfigDeploymentStrategy:
@@ -52,7 +60,9 @@ Resources:
       Content: |
         {
           "min_tasks": 2,
-          "max_task_start_delay_seconds": 8
+          "max_task_start_delay_seconds": 8,
+          "tasks_subnet": "subnet-02f0a2e9ba4b5d279",
+          "tasks_security_group": "sg-0cde2458dac7fcd35"
         }
   AppConfigDeployment:
     Type: AWS::AppConfig::Deployment
