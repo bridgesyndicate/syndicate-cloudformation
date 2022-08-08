@@ -506,6 +506,32 @@ Resources:
         - FARGATE
       NetworkMode: awsvpc
       Cpu: '512'
+  SyndicateBastionTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: arn:aws:iam::595508394202:role/ecsTaskExecutionRole
+      ContainerDefinitions:
+        - Name: SyndicateBastionTask
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/SyndicateBastionTask
+              awslogs-region: us-west-2
+              awslogs-stream-prefix: ecs
+          Environment:
+            - Name: SYNDICATE_ENV
+              Value: production
+            - Name: POSTGRES_HOST
+              Value: !GetAtt SyndicateRankedRDSInstance.Endpoint.Address
+          Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bastion:latest
+      PlacementConstraints: []
+      Memory: 1024
+      TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-discord-bot-task-role
+      Family: SyndicateBastionTaskDefinition
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: '512'
   SyndicateDiscordBotECSService:
     Type: AWS::ECS::Service
     Properties:
@@ -521,6 +547,21 @@ Resources:
             - !Ref SubnetDiscordBot
       SchedulingStrategy: REPLICA
       TaskDefinition: !Ref SyndicateDiscordBotTaskDefinition
+  SyndicateBastionECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: SyndicateBastionECSService
+      Cluster: !Ref SyndicateECSCluster
+      DesiredCount: 0
+      EnableExecuteCommand: 'true'
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets:
+            - !Ref SubnetDiscordBot
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref SyndicateBastionTaskDefinition
   SyndicateRankedRDSInstanceSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
