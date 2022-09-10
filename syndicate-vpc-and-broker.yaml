@@ -456,13 +456,13 @@ Resources:
               Value: syndicate_production_games
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bridge-servers:latest
       PlacementConstraints: []
-      Memory: 1024
+      Memory: 2048
       TaskRoleArn: arn:aws:iam::595508394202:role/syndicate-bridge-dev-server-task-role
       Family: SyndicateBridgeTaskDefinition
       RequiresCompatibilities:
         - FARGATE
       NetworkMode: awsvpc
-      Cpu: '512'
+      Cpu: '1024'
   SyndicateBridgeECSService:
     Type: AWS::ECS::Service
     Properties:
