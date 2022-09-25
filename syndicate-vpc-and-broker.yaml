@@ -401,6 +401,9 @@ Resources:
             - HostPort: 25565
               Protocol: tcp
               ContainerPort: 25565
+          Environment:
+            - Name: SYNDICATE_ENV
+              Value: production
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-lobby:latest
       PlacementConstraints: []
       Memory: 1024
