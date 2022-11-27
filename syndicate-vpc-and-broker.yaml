@@ -292,8 +292,7 @@ Resources:
           Image: 595508394202.dkr.ecr.us-west-2.amazonaws.com/syn-bungee-servers:latest
           Environment:
             - Name: RABBIT_URI
-              Value: !ImportValue
-                'SyndicateVPCAndBroker-AmqpEndpoint'
+              Value: !Join [ ",", !GetAtt SyndicateBroker.AmqpEndpoints ]
             - Name: LOBBY_HOSTNAME
               Value: !GetAtt LobbyLoadBalancer.DNSName
             - Name: SYNDICATE_KICK_HOST
